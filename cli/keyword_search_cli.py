@@ -1,5 +1,5 @@
 import argparse
-
+from naive_search_cli import naive_search
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
@@ -14,6 +14,9 @@ def main() -> None:
         case "search":
             # print the search query here
             print(f"Searching for: {args.query}")
+            matches = naive_search(args.query)
+            for i, match in enumerate(matches):
+                print(f"{i+1}. {match['title']}")
         case _:
             parser.print_help()
 
