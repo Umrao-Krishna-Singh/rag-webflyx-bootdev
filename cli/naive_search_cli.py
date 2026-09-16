@@ -1,5 +1,6 @@
 import json
 import string
+from nltk.stem import PorterStemmer
 from typing import TypedDict
 class Movie(TypedDict):
     id: int
@@ -8,18 +9,18 @@ class Movie(TypedDict):
 
 class MoviesResponse(TypedDict):
     movies: list[Movie]
+    
+stemmer = PorterStemmer()
+stem = stemmer.stem
 
 
-def search_logic(movie:Movie,keyword:str)->bool:    
+def search_logic(movie:Movie, keyword_parts:list[str])->bool:    
     # we are trying to find any part of the keyword with any part of title
-    parts = keyword.split()
+    title = list(map(stem,(preprocess_strings(movie['title']).split())))
+    
     found = False
-    stop_words = load_stop_words()
-    parts = filter(lambda part: part not in stop_words,parts)
-    
-    
-    for part in parts:
-        found = preprocess_strings(part) in preprocess_strings(movie['title'])
+    for part in keyword_parts:
+        found = part in title
         
         # once any part matches, the whole string search is true so we break out
         if found:
@@ -33,8 +34,8 @@ def preprocess_strings(part:str)->str:
     
     return part.lower().translate(translation_table)
 
-def search_title(movie:Movie,keyword:str):        
-    return True if search_logic(movie,keyword) else False
+def search_title(movie:Movie, keyword_parts:list[str])->bool:        
+    return True if search_logic(movie,keyword_parts) else False
 
 def load_stop_words()->list[str]:
     with open("data/stop_words.txt", "r") as file:
@@ -51,8 +52,11 @@ def load_movies()->MoviesResponse:
 
 def naive_search(keyword:str):
     movie_data = load_movies()
-        
-    results = list(filter(lambda movie: search_title(movie, keyword), movie_data['movies']))
+    stop_words = load_stop_words()
+    parts = keyword.split()
+    keyword_parts = list(map(stem, map(preprocess_strings,filter(lambda part: part not in stop_words,parts))))
+
+    results = list(filter(lambda movie: search_title(movie,keyword_parts), movie_data['movies']))
     
     if len(results)>5:
         results = results[:5]
