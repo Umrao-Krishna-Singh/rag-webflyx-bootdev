@@ -47,6 +47,11 @@ def main() -> None:
     tfidf_parser.add_argument("id", type=int, help="doc id for tfidf search")
     tfidf_parser.add_argument("term", type=str, help="term to search using tfidf")
 
+    bm25idf_parser = subparsers.add_parser(
+        "bm25idf", help="Get BM25 IDF score for a given term"
+    )
+    bm25idf_parser.add_argument("term", type=str, help="get bm25idf value for the term")
+
     args = parser.parse_args()
 
     match args.command:
@@ -88,6 +93,11 @@ def main() -> None:
             print(
                 f"TF-IDF score of '{args.term}' in document '{args.id}': {tf_idf:.2f}"
             )
+
+        case "bm25idf":
+            movie_idx = InvertedIndex()
+            bm25idf = movie_idx.get_bm25_idf(args.term)
+            print(f"BM25 IDF score of '{args.term}': {bm25idf:.2f}")
 
         case _:
             parser.print_help()

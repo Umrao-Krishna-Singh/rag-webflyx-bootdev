@@ -127,3 +127,15 @@ class InvertedIndex:
 
         idf = math.log((total_doc_count + 1) / (term_match_doc_count + 1))
         return idf
+
+    def get_bm25_idf(self, term: str) -> float:
+        self.load()
+        N = len(self.movie_data["movies"])
+        search_tokens = self.__tokenize_text(term)
+        term_match_doc = self.get_document(search_tokens[0])
+        if term_match_doc is None:
+            raise ValueError(f"{term} not found!")
+        df = len(term_match_doc)
+
+        bm25_idf = math.log((N - df + 0.5) / (df + 0.5) + 1)
+        return bm25_idf
