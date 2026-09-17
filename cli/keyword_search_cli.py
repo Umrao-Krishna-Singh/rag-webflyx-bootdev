@@ -31,6 +31,11 @@ def main() -> None:
         nargs="?",
         default="merida",
     )
+    term_frequency_parser = subparsers.add_parser(
+        "tf", help="Search by doc id and term to get the frequency of the term"
+    )
+    term_frequency_parser.add_argument("id", type=int, help="document id to search")
+    term_frequency_parser.add_argument("query", type=str, help="term to search")
 
     args = parser.parse_args()
 
@@ -49,6 +54,11 @@ def main() -> None:
 
         case "build":
             build(args.query)
+        case "tf":
+            movie_idx = InvertedIndex()
+            movie_idx.load()
+            freq = movie_idx.get_tf(args.id, args.query)
+            print(freq)
 
         case _:
             parser.print_help()

@@ -9,6 +9,7 @@ from naive_search_cli import (
 from typing import Dict
 from pickle import dump, load
 from os.path import exists
+from collections import Counter
 
 movie_data = load_movies()
 stop_words = load_stop_words()
@@ -21,24 +22,31 @@ class InvertedIndex:
         self.index: Dict[str, list[int]] = {}
         # movie.id->movie index === docmap maps movie id to movie document index in the movies array
         self.docmap: Dict[int, int] = {}
+        # movie.id->Counter{movie tokens} frequency of tokens on each movie
+        self.term_frequencies = {}
 
     def __tokenize_text(self, sentence: str) -> list[str]:
         parts = sentence.split()
         tokens = list(
-            set(
+            # set(
+            map(
+                stem,
                 map(
-                    stem,
-                    map(
-                        preprocess_strings,
-                        filter(lambda part: part not in stop_words, parts),
-                    ),
-                )
+                    preprocess_strings,
+                    filter(lambda part: part not in stop_words, parts),
+                ),
             )
+            # )
         )
         return tokens
 
     def __add_document(self, doc_id: int, text: str):
         tokens = self.__tokenize_text(text)
+        count = Counter(tokens)
+        self.term_frequencies[doc_id] = count
+
+        # remove duplicates here
+        tokens = list(set(tokens))
         for token in tokens:
             self.index.setdefault(token, []).append(doc_id)
 
@@ -65,6 +73,9 @@ class InvertedIndex:
         with open("cache/docmap.pkl", "wb") as d:
             dump(self.docmap, d)
 
+        with open("cache/term_frequencies.pkl", "wb") as t:
+            dump(self.term_frequencies, t)
+
     def build_command(self):
         self.build()
         self.save()
@@ -74,11 +85,18 @@ class InvertedIndex:
             raise LookupError("index.pkl file not found")
         if not exists("cache/docmap.pkl"):
             raise LookupError("docmap.pkl file not found")
+        if not exists("cache/term_frequencies.pkl"):
+            raise LookupError("term_frequencies.pkl file not found")
 
         with open("cache/index.pkl", "rb") as i:
             self.index = load(i)
         with open("cache/docmap.pkl", "rb") as d:
             self.docmap = load(d)
+        with open("cache/term_frequencies.pkl", "rb") as t:
+            self.term_frequencies = load(t)
+
+    def get_tf(self, doc_id: int, term: str):
+        return self.term_frequencies[doc_id][term]
 
     def search_mv(self, search_term: str) -> list[Movie]:
         self.load()
