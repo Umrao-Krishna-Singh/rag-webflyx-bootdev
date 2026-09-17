@@ -10,6 +10,7 @@ from typing import Dict
 from pickle import dump, load
 from os.path import exists
 from collections import Counter
+import math
 
 movie_data = load_movies()
 stop_words = load_stop_words()
@@ -114,3 +115,15 @@ class InvertedIndex:
                     break
 
         return movies
+
+    def calculate_idf(self, token: str) -> float:
+        total_doc_count = len(self.movie_data["movies"])
+        self.load()
+        search_tokens = self.__tokenize_text(token)
+        term_match_doc = self.get_document(search_tokens[0])
+        if term_match_doc is None:
+            raise ValueError(f"{token} not found!")
+        term_match_doc_count = len(term_match_doc)
+
+        idf = math.log((total_doc_count + 1) / (term_match_doc_count + 1))
+        return idf

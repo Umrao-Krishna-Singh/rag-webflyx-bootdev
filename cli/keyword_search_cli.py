@@ -36,17 +36,27 @@ def main() -> None:
     )
     term_frequency_parser.add_argument("id", type=int, help="document id to search")
     term_frequency_parser.add_argument("query", type=str, help="term to search")
+    inv_doc_freq_parser = subparsers.add_parser(
+        "idf", help="Search idf value for a term"
+    )
+    inv_doc_freq_parser.add_argument(
+        "term", type=str, help="Search term to determine the idf value"
+    )
 
     args = parser.parse_args()
 
     match args.command:
+        # naive search approach
+        # case "search":
+        #     # print the search query here
+        #     print(f"Searching for: {args.query}")
+        #     matches = naive_search(args.query)
+        #     for i, match in enumerate(matches):
+        #         print(f"{i+1}. {match['title']}")
+
         case "search":
             # print the search query here
             print(f"Searching for: {args.query}")
-            # matches = naive_search(args.query)
-
-            # for i, match in enumerate(matches):
-            #     print(f"{i+1}. {match['title']}")
             movie_idx = InvertedIndex()
             matches = movie_idx.search_mv(args.query)
             for i, match in enumerate(matches):
@@ -54,11 +64,17 @@ def main() -> None:
 
         case "build":
             build(args.query)
+
         case "tf":
             movie_idx = InvertedIndex()
             movie_idx.load()
             freq = movie_idx.get_tf(args.id, args.query)
             print(freq)
+
+        case "idf":
+            movie_idx = InvertedIndex()
+            idf = movie_idx.calculate_idf(args.term)
+            print(f"Inverse document frequency of '{args.term}': {idf:.2f}")
 
         case _:
             parser.print_help()
