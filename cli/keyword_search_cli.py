@@ -43,6 +43,10 @@ def main() -> None:
         "term", type=str, help="Search term to determine the idf value"
     )
 
+    tfidf_parser = subparsers.add_parser("tfidf", help="Search by docs by tfidf")
+    tfidf_parser.add_argument("id", type=int, help="doc id for tfidf search")
+    tfidf_parser.add_argument("term", type=str, help="term to search using tfidf")
+
     args = parser.parse_args()
 
     match args.command:
@@ -75,6 +79,15 @@ def main() -> None:
             movie_idx = InvertedIndex()
             idf = movie_idx.calculate_idf(args.term)
             print(f"Inverse document frequency of '{args.term}': {idf:.2f}")
+
+        case "tfidf":
+            movie_idx = InvertedIndex()
+            idf = movie_idx.calculate_idf(args.term)
+            freq = movie_idx.get_tf(args.id, args.term)
+            tf_idf = freq * idf
+            print(
+                f"TF-IDF score of '{args.term}' in document '{args.id}': {tf_idf:.2f}"
+            )
 
         case _:
             parser.print_help()
