@@ -7,7 +7,8 @@ from naive_search_cli import (
     stem,
 )
 from typing import Dict
-from pickle import dump
+from pickle import dump, load
+from os.path import exists
 
 movie_data = load_movies()
 stop_words = load_stop_words()
@@ -16,9 +17,9 @@ stop_words = load_stop_words()
 class InvertedIndex:
     def __init__(self) -> None:
         self.movie_data = movie_data
-        # maps token to list of ids in movie array that satisfies the token
+        # token->[movie.id] ===  maps token to list of ids in movie array that satisfies the token
         self.index: Dict[str, list[int]] = {}
-        # docmap maps movie id to movie document index in the movies array
+        # movie.id->movie index === docmap maps movie id to movie document index in the movies array
         self.docmap: Dict[int, int] = {}
 
     def __tokenize_text(self, sentence: str) -> list[str]:
@@ -67,3 +68,31 @@ class InvertedIndex:
     def build_command(self):
         self.build()
         self.save()
+
+    def load(self):
+        if not exists("cache/index.pkl"):
+            raise LookupError("index.pkl file not found")
+        if not exists("cache/docmap.pkl"):
+            raise LookupError("docmap.pkl file not found")
+
+        with open("cache/index.pkl", "rb") as i:
+            self.index = load(i)
+        with open("cache/docmap.pkl", "rb") as d:
+            self.docmap = load(d)
+
+    def search_mv(self, search_term: str) -> list[Movie]:
+        self.load()
+        search_tokens = self.__tokenize_text(search_term)
+        movies: list[Movie] = []
+
+        for st in search_tokens:
+            doc_ids = self.get_document(st)
+            if doc_ids is None:
+                continue
+
+            for doc_id in doc_ids:
+                movies.append(self.movie_data["movies"][self.docmap[doc_id]])
+                if len(movies) >= 5:
+                    break
+
+        return movies

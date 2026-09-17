@@ -1,7 +1,6 @@
 import argparse
 from naive_search_cli import naive_search
 from inverted_index_search_cli import InvertedIndex
-from pickle import load
 
 
 def build(term: str):
@@ -39,9 +38,14 @@ def main() -> None:
         case "search":
             # print the search query here
             print(f"Searching for: {args.query}")
-            matches = naive_search(args.query)
+            # matches = naive_search(args.query)
+
+            # for i, match in enumerate(matches):
+            #     print(f"{i+1}. {match['title']}")
+            movie_idx = InvertedIndex()
+            matches = movie_idx.search_mv(args.query)
             for i, match in enumerate(matches):
-                print(f"{i+1}. {match['title']}")
+                print(f"{i+1}. id:{match['id']} - Title: {match['title']}")
 
         case "build":
             build(args.query)
