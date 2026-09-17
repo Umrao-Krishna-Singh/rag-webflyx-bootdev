@@ -1,5 +1,22 @@
 import argparse
 from naive_search_cli import naive_search
+from inverted_index_search_cli import InvertedIndex
+from pickle import load
+
+
+def build(term: str):
+    print("Starting build process...")
+    i_idx = InvertedIndex()
+    i_idx.build_command()
+    docs = i_idx.get_document(term)
+
+    if docs is None:
+        raise ValueError(
+            f"Could not find the document! This should not happen in this course! 'term': {term}"
+        )
+
+    print(f"First document for token '{term}' = {docs[0]}")
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
@@ -7,6 +24,14 @@ def main() -> None:
 
     search_parser = subparsers.add_parser("search", help="Search movies using keywords")
     search_parser.add_argument("query", type=str, help="Search query")
+    build_parser = subparsers.add_parser("build", help="Build the inverted index")
+    build_parser.add_argument(
+        "query",
+        type=str,
+        help="Search query from inverted index",
+        nargs="?",
+        default="merida",
+    )
 
     args = parser.parse_args()
 
@@ -17,6 +42,10 @@ def main() -> None:
             matches = naive_search(args.query)
             for i, match in enumerate(matches):
                 print(f"{i+1}. {match['title']}")
+
+        case "build":
+            build(args.query)
+
         case _:
             parser.print_help()
 
