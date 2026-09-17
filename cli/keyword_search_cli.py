@@ -1,6 +1,6 @@
 import argparse
 from naive_search_cli import naive_search
-from inverted_index_search_cli import InvertedIndex
+from inverted_index_search_cli import InvertedIndex, BM25_K1
 
 
 def build(term: str):
@@ -52,6 +52,15 @@ def main() -> None:
     )
     bm25idf_parser.add_argument("term", type=str, help="get bm25idf value for the term")
 
+    bm25_tf_parser = subparsers.add_parser(
+        "bm25tf", help="Get BM25 TF score for a given document ID and term"
+    )
+    bm25_tf_parser.add_argument("doc_id", type=int, help="Document ID")
+    bm25_tf_parser.add_argument("term", type=str, help="Term to get BM25 TF score for")
+    bm25_tf_parser.add_argument(
+        "k1", type=float, nargs="?", default=BM25_K1, help="Tunable BM25 K1 parameter"
+    )
+
     args = parser.parse_args()
 
     match args.command:
@@ -98,6 +107,13 @@ def main() -> None:
             movie_idx = InvertedIndex()
             bm25idf = movie_idx.get_bm25_idf(args.term)
             print(f"BM25 IDF score of '{args.term}': {bm25idf:.2f}")
+
+        case "bm25tf":
+            movie_idx = InvertedIndex()
+            bm25tf = movie_idx.get_bm25_tf(args.doc_id, args.term, args.k1)
+            print(
+                f"BM25 TF score of '{args.term}' in document '{args.doc_id}': {bm25tf:.2f}"
+            )
 
         case _:
             parser.print_help()

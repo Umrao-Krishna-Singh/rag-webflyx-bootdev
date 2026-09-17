@@ -14,6 +14,7 @@ import math
 
 movie_data = load_movies()
 stop_words = load_stop_words()
+BM25_K1 = 1.5
 
 
 class InvertedIndex:
@@ -139,3 +140,9 @@ class InvertedIndex:
 
         bm25_idf = math.log((N - df + 0.5) / (df + 0.5) + 1)
         return bm25_idf
+
+    def get_bm25_tf(self, doc_id: int, term: str, k1=BM25_K1):
+        self.load()
+        search_tokens = self.__tokenize_text(term)
+        tf = self.get_tf(doc_id, search_tokens[0])
+        return (tf * (k1 + 1)) / (tf + k1)
